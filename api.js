@@ -29,7 +29,7 @@ function callClaudeWithRetry(messages, attempt) {
     console.warn("[api] Context trimmed to manage window size");
   }
 
-  return fetch("https://api.anthropic.com/v1/messages", {
+  return fetch("https://cade-proxy.brandon-wesch.workers.dev", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
