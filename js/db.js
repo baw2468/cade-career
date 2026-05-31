@@ -1,63 +1,59 @@
-// db.js — Database abstraction layer. All Firebase access routes through this file only.
+var db = {
 
-function FirebaseAdapter() {
-  function baseUrl(key) {
+  _url: function(key) {
     return CADE_CONFIG.firebase.databaseURL + "/" + CADE_CONFIG.userPath + "/" + key + ".json";
-  }
+  },
 
-  function maybeToArray(val) {
+  _toArray: function(val) {
     if (!val || typeof val !== "object" || Array.isArray(val)) return val;
     var keys = Object.keys(val);
     if (keys.length === 0) return [];
-    var allPushKeys = keys.every(function(k) {
-      return k.charAt(0) === "-" && k.length > 10;
-    });
-    if (allPushKeys) return keys.map(function(k) { return val[k]; });
-    return val;
-  }
+    var isPushKeys = keys.every(function(k) { return k.charAt(0) === "-" && k.length > 10; });
+    return isPushKeys ? keys.map(function(k) { return val[k]; }) : val;
+  },
 
-  this.get = function(key) {
-    return fetch(baseUrl(key), { method: "GET" })
-      .then(function(res) { return res.json(); })
-      .then(function(data) { return maybeToArray(data); })
-      .catch(function(err) { console.warn("[db.get] " + key, err); return null; });
-  };
+  get: function(key) {
+    var self = this;
+    return fetch(self._url(key))
+      .then(function(r) { return r.json(); })
+      .then(function(d) { return self._toArray(d); })
+      .catch(function(e) { console.warn("[db.get]", key, e); return null; });
+  },
 
-  this.set = function(key, value) {
-    return fetch(baseUrl(key), {
+  set: function(key, value) {
+    return fetch(this._url(key), {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(value)
     })
-      .then(function(res) { return res.json(); })
-      .catch(function(err) { console.warn("[db.set] " + key, err); return null; });
-  };
+      .then(function(r) { return r.json(); })
+      .catch(function(e) { console.warn("[db.set]", key, e); return null; });
+  },
 
-  this.update = function(key, patch) {
-    return fetch(baseUrl(key), {
+  update: function(key, patch) {
+    return fetch(this._url(key), {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch)
     })
-      .then(function(res) { return res.json(); })
-      .catch(function(err) { console.warn("[db.update] " + key, err); return null; });
-  };
+      .then(function(r) { return r.json(); })
+      .catch(function(e) { console.warn("[db.update]", key, e); return null; });
+  },
 
-  this.push = function(key, item) {
-    return fetch(baseUrl(key), {
+  push: function(key, item) {
+    return fetch(this._url(key), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(item)
     })
-      .then(function(res) { return res.json(); })
-      .catch(function(err) { console.warn("[db.push] " + key, err); return null; });
-  };
+      .then(function(r) { return r.json(); })
+      .catch(function(e) { console.warn("[db.push]", key, e); return null; });
+  },
 
-  this.delete = function(key) {
-    return fetch(baseUrl(key), { method: "DELETE" })
+  delete: function(key) {
+    return fetch(this._url(key), { method: "DELETE" })
       .then(function() { return true; })
-      .catch(function(err) { console.warn("[db.delete] " + key, err); return null; });
-  };
-}
+      .catch(function(e) { console.warn("[db.delete]", key, e); return null; });
+  }
 
-var db = new FirebaseAdapter();
+};
